@@ -11,8 +11,6 @@ s3 = boto3.client(
    aws_secret_access_key=config.S3_SECRET
 )
 
-print("banana", config.S3_BUCKET)
-
 app = Flask(__name__)
 app.config.from_object(config)
 
@@ -85,4 +83,6 @@ def get_file(code):
     if code == "" or code == None:
         return "Please select a file"
 
-    return get_file_from_s3(code, app.config['S3_BUCKET'])
+    file, filename = get_file_from_s3(code, app.config['S3_BUCKET'])
+
+    return send_file(file, attachment_filename=filename, as_attachment=True)
