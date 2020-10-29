@@ -1,10 +1,10 @@
-import config 
+from bhej.config import API_URL
 import requests
 import magic
 import typer
 
 app = typer.Typer()
-url = config.API_URL
+url = API_URL
 
 @app.command()
 def up(filename: str):
@@ -30,7 +30,7 @@ def up(filename: str):
 @app.command()
 def down(filecode: str):
     typer.echo(f"Downloading {filecode}")
-
+    
 
 if __name__ == "__main__":
     app()
