@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, send_file
 from werkzeug.utils import secure_filename
 
 import boto3, botocore
@@ -56,7 +56,7 @@ def get_file_from_s3(code, bucket_name, acl="public-read"):
 
     print(obj)
 
-    return obj
+    return obj['Body'], obj['Metadata']['filename']
 
 @app.route("/upload", methods=["POST"])
 def upload_file():
@@ -82,9 +82,11 @@ def upload_file():
 @app.route("/file/<code>", methods=["GET"])
 def get_file(code):
 
-    code = request.args.get("code")
-
-    if code == "":
+    if code == "" or code == None:
         return "Please select a file"
 
-    return get_file_from_s3(code, app.config['S3_BUCKET'])
+    file, filename = get_file_from_s3(code, app.config['S3_BUCKET'])
+
+    print(filename)
+
+    return send_file(file, attachment_filename=filename, as_attachment=True)
