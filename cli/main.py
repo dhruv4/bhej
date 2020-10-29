@@ -1,5 +1,6 @@
 import config 
 import requests
+import magic
 import typer
 
 app = typer.Typer()
@@ -8,7 +9,8 @@ url = config.API_URL
 @app.command()
 def up(filename: str):
     try: 
-        files = {'upload_file': open(filename, 'rb')}
+        mime = magic.Magic(mime=True)
+        files = {'upload_file': (filename, open(filename, 'rb'), mime.from_file(filename))}
     except FileNotFoundError as err:
         typer.echo(f"No such file: '{filename}'. Aborting.")
         return
@@ -19,6 +21,9 @@ def up(filename: str):
     typer.echo(f"Uploading {filename}")
 
     req = requests.post(url + '/upload', files=files)
+    if (req.text == "Missing upload_file"): 
+        typer.echo(f"Error with file upload.")
+
     return req.text
     
 

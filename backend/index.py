@@ -61,10 +61,10 @@ def get_file_from_s3(code, bucket_name, acl="public-read"):
 @app.route("/upload", methods=["POST"])
 def upload_file():
 
-    if "file" not in request.files:
-        return "No user_file key in request.files"
+    if "upload_file" not in request.files:
+        return "Missing upload_file"
 
-    file = request.files["file"]
+    file = request.files["upload_file"]
 
     if file.filename == "":
         return "Please select a file"
@@ -85,8 +85,4 @@ def get_file(code):
     if code == "" or code == None:
         return "Please select a file"
 
-    file, filename = get_file_from_s3(code, app.config['S3_BUCKET'])
-
-    print(filename)
-
-    return send_file(file, attachment_filename=filename, as_attachment=True)
+    return get_file_from_s3(code, app.config['S3_BUCKET'])
