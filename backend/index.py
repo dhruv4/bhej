@@ -87,4 +87,6 @@ def get_file(code):
 
     file, filename = get_file_from_s3(code, app.config['S3_BUCKET'])
 
-    return send_file(file, attachment_filename=filename)
+    print(filename)
+
+    return send_file(file, attachment_filename=filename, as_attachment=True)
