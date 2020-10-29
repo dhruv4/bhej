@@ -3,6 +3,7 @@ from werkzeug.utils import secure_filename
 
 import boto3, botocore
 import config
+from utils import generateCode, allowed_file
 
 s3 = boto3.client(
    "s3",
@@ -10,12 +11,10 @@ s3 = boto3.client(
    aws_secret_access_key=config.S3_SECRET
 )
 
+print("banana", config.S3_BUCKET)
+
 app = Flask(__name__)
 app.config.from_object(config)
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in config.ALLOWED_EXTENSIONS
 
 def upload_file_to_s3(file, bucket_name, acl="public-read"):
 
@@ -24,10 +23,13 @@ def upload_file_to_s3(file, bucket_name, acl="public-read"):
         s3.upload_fileobj(
             file,
             bucket_name,
-            file.filename,
+            generateCode(),
             ExtraArgs={
                 "ACL": acl,
-                "ContentType": file.content_type
+                "ContentType": file.content_type,
+                "Metadata": {
+                    "FileName": file.filename
+                }
             }
         )
 
@@ -38,13 +40,13 @@ def upload_file_to_s3(file, bucket_name, acl="public-read"):
 
     return "{}{}".format(app.config["S3_LOCATION"], file.filename)
 
-def get_file_from_s3(file, bucket_name, acl="public-read"):
+def get_file_from_s3(code, bucket_name, acl="public-read"):
 
     try:
 
-        s3.get_object(
+        obj = s3.get_object(
             Bucket=bucket_name,
-            Key=file.filename,
+            Key=code,
         )
 
     except Exception as e:
@@ -52,7 +54,9 @@ def get_file_from_s3(file, bucket_name, acl="public-read"):
         print("Something Happened: ", e)
         return e
 
-    return "{}{}".format(app.config["S3_LOCATION"], file.filename)
+    print(obj)
+
+    return obj
 
 @app.route("/upload", methods=["POST"])
 def upload_file():
@@ -75,12 +79,12 @@ def upload_file():
     else:
         return redirect("/")
 
-@app.route("/file/<filename>", methods=["GET"])
-def get_file():
+@app.route("/file/<code>", methods=["GET"])
+def get_file(code):
 
-    filename = request.args.get("filename")
+    code = request.args.get("code")
 
-    if filename == "":
+    if code == "":
         return "Please select a file"
 
-    return get_file_from_s3(filename, app.config['S3_BUCKET'])
+    return get_file_from_s3(code, app.config['S3_BUCKET'])
