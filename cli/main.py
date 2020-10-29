@@ -1,3 +1,4 @@
+import cgi
 import config 
 import requests
 import magic
@@ -30,7 +31,9 @@ def up(filename: str):
 @app.command()
 def down(filecode: str):
     typer.echo(f"Downloading {filecode}")
-
+    req = requests.get(url + '/file/'+ filecode)
+    value, params = cgi.parse_header(req.headers['Content-Disposition'])
+    open(params['filename'], 'wb').write(req.content)
 
 if __name__ == "__main__":
     app()
